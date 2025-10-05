@@ -49,14 +49,13 @@ erDiagram
 | Domaine | Outil / Langage | Détails |
 |----------|------------------|---------|
 | **Base de données (SQL)** | PostgreSQL | Stockage des objets et utilisateurs |
-| **Web sémantique (RDF / Turtle)** | RDF Turtle (via Jena ou fichier `.ttl`) | Description sémantique des objets (catégorie, lieu, date, etc.) |
-| **Backend** | Java Spring Boot | Fournit une API REST pour gérer les objets et interagir avec les outils IA |
+| **Backend** | Java Spring Boot | Fournit une API REST pour gérer les objets et interagir avec les outils d’IA |
 | **Frontend** | React (JavaScript) | Interface web pour l’ajout, la recherche et la visualisation des objets |
 | **IA locale** | Ollama | Analyse des descriptions, vérification de similarité et modération de contenu |
-| **Reconnaissance vocale** | Whisper | Conversion de descriptions vocales en texte |
 | **Traitement d’image** | OpenCV (Python) | Détection et floutage automatique de l’objet dans les images |
-| **CMS documentaire** | Omeka S | Gestion des métadonnées et intégration des objets trouvés dans une base documentaire |
 | **Documentation** | Markdown | README + diagrammes Mermaid pour la structure du projet |
+
+
 
 ### Structure du projet (proposée)
 
