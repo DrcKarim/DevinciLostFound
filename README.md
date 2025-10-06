@@ -19,7 +19,7 @@ Quand une personne recherche un objet perdu, elle peut :
 - proposer une description précise de l’objet,  
 - et si sa description correspond à celle du déposant (vérifiée par IA), l’image originale se défloute et les coordonnées du trouveur deviennent visibles.  
 
-La plateforme repose sur un **backend Java Spring Boot** relié à une **base PostgreSQL**, une **interface React**, et des **outils IA open source** (*Ollama*, *Whisper*, *OpenCV*).  
+La plateforme repose sur un **backend Java Spring Boot** relié à une **base PostgreSQL**, une **interface React**, et des **outils IA open source** (*Ollama*, *OpenCV*).  
 
 Ce projet favorise la **collaboration**, la **responsabilité** et la **sécurité** au sein de la communauté étudiante.
 
@@ -64,40 +64,50 @@ Voici l’organisation recommandée des dossiers du projet **DevinciLostFound** 
 ```plaintext
 DevinciLostFound/
 │
-├── backend/                # API Spring Boot (Java)
+├── backend/                           # Backend Java Spring Boot (API REST)
 │   ├── src/main/java/com/devinci/lostfound/
-│   └── resources/
+│   ├── src/main/resources/
+│   ├── pom.xml                        # Configuration Maven
+│   └── Dockerfile                     # Image backend (Spring Boot)
 │
-├── ai/                     # Scripts Python (floutage, audio)
-│   ├── blur_image.py
-│   └── transcribe_audio.py
+├── ai/                                # Scripts Python pour l’IA locale
+│   ├── blur_image.py                  # Détection et floutage automatique d’objets (OpenCV)
+│   ├── ollama_service.py              # Communication avec Ollama pour similarité/modération
+│   └── Dockerfile                     # Image AI (Python + OpenCV + Ollama client)
 │
-├── frontend/               # Interface React (JavaScript)
-│   └── src/
+├── frontend/                          # Frontend React (JavaScript)
+│   ├── src/
+│   ├── public/
+│   ├── package.json                   # Configuration React
+│   └── Dockerfile                     # Image frontend (React)
 │
-├── omeka/                  # Installation locale de Omeka S
+├── database/                          # Scripts SQL et configuration PostgreSQL
+│   ├── init.sql
+│   └── Dockerfile                     # (optionnel) Image custom PostgreSQL avec données initiales
 │
-└── README.md               # Documentation du projet
+├── docker-compose.yml                 # Orchestration des services (backend, frontend, db, ai)
+│
+└── README.md                          # Documentation principale du projet
 ```
-## Utilisation des outils demandés
+## Utilisation des outils d’intelligence artificielle
 
-Ce projet exploite plusieurs outils d’intelligence artificielle et de gestion documentaire demandés dans le cadre du cours :
+Ce projet exploite plusieurs outils d’intelligence artificielle open source pour améliorer la fiabilité et l’efficacité du système **DevinciLostFound** :
 
-- **Ollama** : moteur d’IA local permettant d’exécuter des modèles comme *Llama3* pour comparer les descriptions, vérifier les similarités et modérer le contenu (texte ou image).  
-- **Anything LLM** : interface libre et locale connectée à Ollama, utilisée pour tester les requêtes en langage naturel et interagir avec les données du projet.  
-- **Whisper** : outil de reconnaissance vocale open source d’OpenAI permettant de convertir les descriptions vocales des objets en texte.  
-- **Omeka S** : CMS documentaire open source pour organiser et publier les fiches d’objets trouvés sous forme de collections numériques.  
-- **Mermaid** : générateur de diagrammes intégré au Markdown, utilisé ici pour représenter le diagramme entité–relation directement dans le README.
+- **Ollama** : moteur d’IA local permettant d’exécuter des modèles tels que *Llama3* pour comparer les descriptions des objets, évaluer leur similarité et modérer les contenus textuels.  
+- **OpenCV** : bibliothèque Python utilisée pour la détection automatique d’objets dans les images et l’application d’un floutage afin de masquer temporairement les objets trouvés.  
+- **Mermaid** : outil intégré au Markdown permettant de générer des diagrammes (comme le diagramme entité–relation) directement dans la documentation du projet.  
 
-##  Langages utilisés (exigés par le professeur)
 
-| Langage | Utilisation |
-|----------|--------------|
+## Langages et outils utilisés
+
+| Langage / Outil | Utilisation |
+|------------------|--------------|
 | **SQL** | Utilisé avec PostgreSQL pour stocker les objets, les catégories et les utilisateurs |
-| **RDF / Turtle** | Employé pour décrire les métadonnées sémantiques des objets dans un fichier `.ttl` (catégorie, lieu, date, etc.) |
-| **Java (Spring Boot)** | Utilisé pour le backend et la création de l’API REST permettant de gérer les objets et de communiquer avec les outils d’IA |
-| **JavaScript (React)** | Utilisé dans le frontend pour concevoir l’interface utilisateur, la recherche et l’affichage des objets |
-| **Markdown** | Utilisé pour la documentation du projet, la rédaction du README et l’intégration des diagrammes Mermaid |
+| **Java (Spring Boot)** | Utilisé pour le backend : création de l’API REST, communication avec la base de données et les services d’IA |
+| **Python (OpenCV)** | Utilisé pour la détection automatique et le floutage des objets dans les images, ainsi que pour la communication avec Ollama |
+| **JavaScript (React)** | Utilisé pour le frontend : interface utilisateur, affichage dynamique des objets et interactions avec l’API |
+| **Markdown** | Utilisé pour la documentation du projet, la rédaction du README et l’intégration de diagrammes Mermaid |
+| **Docker / Docker Compose** | Utilisé pour conteneuriser l’application complète (backend, frontend, base de données et services IA) afin de simplifier le déploiement et l’exécution |
 
 ---
 
