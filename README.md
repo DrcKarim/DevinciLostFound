@@ -50,7 +50,7 @@ erDiagram
 |----------|------------------|---------|
 | **Base de données (SQL)** | PostgreSQL | Stockage des objets et utilisateurs |
 | **Backend** | Java Spring Boot | Fournit une API REST pour gérer les objets et interagir avec les outils d’IA |
-| **Frontend** | React (JavaScript) | Interface web pour l’ajout, la recherche et la visualisation des objets |
+| **Frontend** | React (Typescript) | Interface web pour l’ajout, la recherche et la visualisation des objets |
 | **IA locale** | Ollama | Analyse des descriptions, vérification de similarité et modération de contenu |
 | **Traitement d’image** | OpenCV (Python) | Détection et floutage automatique de l’objet dans les images |
 | **Documentation** | Markdown | README + diagrammes Mermaid pour la structure du projet |
@@ -75,7 +75,7 @@ DevinciLostFound/
 │   ├── ollama_service.py              # Communication avec Ollama pour similarité/modération
 │   └── Dockerfile                     # Image AI (Python + OpenCV + Ollama client)
 │
-├── frontend/                          # Frontend React (JavaScript)
+├── frontend/                          # Frontend React (TypeScript)
 │   ├── src/
 │   ├── public/
 │   ├── package.json                   # Configuration React
@@ -105,7 +105,7 @@ Ce projet exploite plusieurs outils d’intelligence artificielle open source po
 | **SQL** | Utilisé avec PostgreSQL pour stocker les objets, les catégories et les utilisateurs |
 | **Java (Spring Boot)** | Utilisé pour le backend : création de l’API REST, communication avec la base de données et les services d’IA |
 | **Python (OpenCV)** | Utilisé pour la détection automatique et le floutage des objets dans les images, ainsi que pour la communication avec Ollama |
-| **JavaScript (React)** | Utilisé pour le frontend : interface utilisateur, affichage dynamique des objets et interactions avec l’API |
+| **TypeScript (React)** | Utilisé pour le frontend : interface utilisateur, affichage dynamique des objets et interactions avec l’API |
 | **Markdown** | Utilisé pour la documentation du projet, la rédaction du README et l’intégration de diagrammes Mermaid |
 | **Docker / Docker Compose** | Utilisé pour conteneuriser l’application complète (backend, frontend, base de données et services IA) afin de simplifier le déploiement et l’exécution |
 
@@ -117,7 +117,7 @@ Le projet **DevinciLostFound** est une plateforme intelligente et collaborative 
 Cette version bêta repose sur une architecture moderne et conteneurisée, combinant **Spring Boot**, **React**, **PostgreSQL**, **Ollama**, **OpenCV** et **Docker**.
 
 Le projet répond aux objectifs du cours en intégrant :  
-- plusieurs **langages et technologies open source** (Java, JavaScript, Python, SQL, Markdown) ;  
+- plusieurs **langages et technologies open source** (Java, Typescript, Python, SQL, Markdown) ;  
 - des **outils d’intelligence artificielle** (Ollama pour le raisonnement et la modération, OpenCV pour le floutage automatique) ;  
 - une **infrastructure Docker** facilitant l’installation, l’exécution et le déploiement multi-services ;  
 - une **documentation claire** en Markdown avec diagrammes Mermaid pour la structure et les entités.  
