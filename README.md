@@ -113,11 +113,15 @@ Ce projet exploite plusieurs outils d’intelligence artificielle open source po
 
 ## Résumé
 
-Le projet **DevinciLostFound** répond à toutes les exigences du cours :  
-- utilisation des **cinq langages imposés** ;  
-- intégration de plusieurs **outils d’intelligence artificielle open source** (Ollama, Whisper, Anything LLM, OpenCV) ;  
-- ajout d’un **CMS documentaire (Omeka S)** pour la gestion et la visualisation des objets ;  
-- documentation complète avec **diagrammes Mermaid** et **syntaxe Markdown**.  
+Le projet **DevinciLostFound** est une plateforme intelligente et collaborative dédiée à la gestion des objets perdus et trouvés au sein du campus Léonard de Vinci.  
+Cette version bêta repose sur une architecture moderne et conteneurisée, combinant **Spring Boot**, **React**, **PostgreSQL**, **Ollama**, **OpenCV** et **Docker**.
 
-**Objectif final :** proposer une solution éthique, intelligente et collaborative pour la gestion des objets perdus et trouvés au sein du campus Léonard de Vinci.
+Le projet répond aux objectifs du cours en intégrant :  
+- plusieurs **langages et technologies open source** (Java, JavaScript, Python, SQL, Markdown) ;  
+- des **outils d’intelligence artificielle** (Ollama pour le raisonnement et la modération, OpenCV pour le floutage automatique) ;  
+- une **infrastructure Docker** facilitant l’installation, l’exécution et le déploiement multi-services ;  
+- une **documentation claire** en Markdown avec diagrammes Mermaid pour la structure et les entités.  
+
+**Objectif final :** offrir une solution simple, sécurisée et intelligente pour aider les étudiants et le personnel à retrouver leurs objets tout en favorisant la collaboration et la responsabilité au sein de la communauté du campus Léonard de Vinci.
+
  
