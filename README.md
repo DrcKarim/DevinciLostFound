@@ -28,6 +28,17 @@ Ce projet favorise la **collaboration**, la **responsabilité** et la **sécurit
 ```mermaid
 erDiagram
     UTILISATEUR ||--o{ OBJET : dépose
+    OBJET ||--o{ VERIFICATION : concerne
+    OBJET ||--o{ MODERATION : surveille
+    OBJET ||--o{ CATEGORIE : appartient
+
+    UTILISATEUR {
+        int id PK
+        string nom
+        string email
+        string telephone
+    }
+
     OBJET {
         int id PK
         string titre
@@ -37,10 +48,25 @@ erDiagram
         date date_trouve
         boolean revendique
     }
-    CATEGORIE ||--o{ OBJET : classifie
+
     CATEGORIE {
         int id PK
         string nom
+    }
+
+    VERIFICATION {
+        int id PK
+        int objet_id FK
+        string reponse_utilisateur
+        float taux_similarite
+        boolean valide
+    }
+
+    MODERATION {
+        int id PK
+        int objet_id FK
+        boolean contenu_approprie
+        string commentaire_ia
     }
 ```
 
