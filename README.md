@@ -121,7 +121,6 @@ Ce projet exploite plusieurs outils d’intelligence artificielle open source po
 
 - **Ollama** : moteur d’IA local permettant d’exécuter des modèles tels que *Llama3* pour comparer les descriptions des objets, évaluer leur similarité et modérer les contenus textuels.  
 - **OpenCV** : bibliothèque Python utilisée pour la détection automatique d’objets dans les images et l’application d’un floutage afin de masquer temporairement les objets trouvés.  
-- **Mermaid** : outil intégré au Markdown permettant de générer des diagrammes (comme le diagramme entité–relation) directement dans la documentation du projet.  
 
 
 ## Langages et outils utilisés
