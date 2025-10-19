@@ -1,0 +1,59 @@
+@prefix dlf: <http://devincilostfound.com/vocab#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<http://devincilostfound.com/vocab>
+    a owl:Ontology ;
+    rdfs:label "Vocabulaire DevinciLostFound" ;
+    rdfs:comment "Vocabulaire sémantique pour décrire les objets perdus, les lieux et les personnes de l’écosystème de l’école Léonard de Vinci." .
+
+# -----------------------------
+# Classes
+# -----------------------------
+dlf:ObjetPerdu a rdfs:Class ;
+    rdfs:label "Objet perdu" ;
+    rdfs:comment "Un objet signalé comme perdu ou retrouvé." .
+
+dlf:Personne a rdfs:Class ;
+    rdfs:label "Personne" ;
+    rdfs:comment "Une personne qui a perdu ou trouvé un objet." .
+
+dlf:Lieu a rdfs:Class ;
+    rdfs:label "Lieu" ;
+    rdfs:comment "Un lieu de l’école où des objets peuvent être perdus ou retrouvés." .
+
+# -----------------------------
+# Propriétés
+# -----------------------------
+dlf:nomObjet a rdf:Property ;
+    rdfs:label "Nom de l’objet" ;
+    rdfs:domain dlf:ObjetPerdu ;
+    rdfs:comment "Nom ou titre de l’objet perdu." .
+
+dlf:description a rdf:Property ;
+    rdfs:label "Description" ;
+    rdfs:domain dlf:ObjetPerdu ;
+    rdfs:comment "Description de l’objet ou de son apparence." .
+
+dlf:datePerte a rdf:Property ;
+    rdfs:label "Date de perte" ;
+    rdfs:domain dlf:ObjetPerdu ;
+    rdfs:comment "Date à laquelle l’objet a été perdu." .
+
+dlf:lieuPerte a rdf:Property ;
+    rdfs:label "Lieu de perte" ;
+    rdfs:domain dlf:ObjetPerdu ;
+    rdfs:range dlf:Lieu ;
+    rdfs:comment "Lieu où l’objet a été perdu." .
+
+dlf:trouvePar a rdf:Property ;
+    rdfs:label "Trouvé par" ;
+    rdfs:domain dlf:ObjetPerdu ;
+    rdfs:range dlf:Personne ;
+    rdfs:comment "Personne ayant trouvé l’objet." .
+
+dlf:contact a rdf:Property ;
+    rdfs:label "Contact" ;
+    rdfs:domain dlf:Personne ;
+    rdfs:comment "Coordonnées pour contacter la personne." .

@@ -1,0 +1,71 @@
+{
+    "o:label": "Objet Perdu",
+    "o:resource_template_property": [
+        {
+            "o:alternate_label": null,
+            "o:alternate_comment": null,
+            "o:is_required": false,
+            "o:is_private": false,
+            "o:default_lang": null,
+            "data_types": [],
+            "vocabulary_namespace_uri": "http:\/\/devincilostfound.com\/vocab#",
+            "vocabulary_label": "Vocabulaire DevinciLostFound",
+            "local_name": "nomObjet",
+            "label": "Nom de l\u2019objet"
+        },
+        {
+            "o:alternate_label": null,
+            "o:alternate_comment": null,
+            "o:is_required": false,
+            "o:is_private": false,
+            "o:default_lang": null,
+            "data_types": [],
+            "vocabulary_namespace_uri": "http:\/\/devincilostfound.com\/vocab#",
+            "vocabulary_label": "Vocabulaire DevinciLostFound",
+            "local_name": "description",
+            "label": "Description"
+        },
+        {
+            "o:alternate_label": null,
+            "o:alternate_comment": null,
+            "o:is_required": false,
+            "o:is_private": false,
+            "o:default_lang": null,
+            "data_types": [],
+            "vocabulary_namespace_uri": "http:\/\/devincilostfound.com\/vocab#",
+            "vocabulary_label": "Vocabulaire DevinciLostFound",
+            "local_name": "datePerte",
+            "label": "Date de perte"
+        },
+        {
+            "o:alternate_label": null,
+            "o:alternate_comment": null,
+            "o:is_required": false,
+            "o:is_private": false,
+            "o:default_lang": null,
+            "data_types": [],
+            "vocabulary_namespace_uri": "http:\/\/devincilostfound.com\/vocab#",
+            "vocabulary_label": "Vocabulaire DevinciLostFound",
+            "local_name": "lieuPerte",
+            "label": "Lieu de perte"
+        },
+        {
+            "o:alternate_label": null,
+            "o:alternate_comment": null,
+            "o:is_required": false,
+            "o:is_private": false,
+            "o:default_lang": null,
+            "data_types": [],
+            "vocabulary_namespace_uri": "http:\/\/devincilostfound.com\/vocab#",
+            "vocabulary_label": "Vocabulaire DevinciLostFound",
+            "local_name": "trouvePar",
+            "label": "Trouv\u00e9 par"
+        }
+    ],
+    "o:resource_class": {
+        "vocabulary_namespace_uri": "http:\/\/devincilostfound.com\/vocab#",
+        "vocabulary_label": "Vocabulaire DevinciLostFound",
+        "local_name": "ObjetPerdu",
+        "label": "Objet perdu"
+    }
+}
