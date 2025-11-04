@@ -3,8 +3,6 @@
 
 Lien omeka: https://omeka.todayfrance.fr/
 
-user: karimbochx@gmail.com
-pass: %1FEv9cH9t
 ---
 
 ### Description du projet  
