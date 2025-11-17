@@ -1,243 +1,212 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Objets trouvés - API Omeka S</title>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', Roboto, sans-serif;
-      margin: 0;
-      background: #f8f9fa;
-      color: #333;
-      line-height: 1.6;
-    }
+    <meta charset="UTF-8">
+    <title>Devinci Lost & Found — Enregistreur Audio</title>
 
-    header {
-      background: #1e88e5;
-      color: white;
-      text-align: center;
-      padding: 1.5rem 1rem;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
+    <!-- NEW modern CSS -->
+    <link rel="stylesheet" href="assets/css/app.css">
 
-    header h1 {
-      margin: 0;
-      font-size: 1.8rem;
-    }
+    <!-- Required JS -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 
-    main {
-      max-width: 800px;
-      margin: 2rem auto;
-      padding: 2rem;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    section {
-      margin-bottom: 2rem;
-    }
-
-    h2 {
-      color: #1e88e5;
-      border-left: 5px solid #1e88e5;
-      padding-left: 10px;
-      margin-bottom: 1rem;
-    }
-
-    label {
-      display: block;
-      margin-top: 0.5rem;
-      font-weight: 600;
-    }
-
-    input {
-      width: 100%;
-      padding: 0.6rem;
-      margin-top: 0.3rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 1rem;
-      transition: border 0.2s;
-    }
-
-    input:focus {
-      border-color: #1e88e5;
-      outline: none;
-    }
-
-    button {
-      margin-top: 1rem;
-      background: #1e88e5;
-      color: white;
-      border: none;
-      padding: 0.7rem 1.2rem;
-      border-radius: 6px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    button:hover {
-      background: #1565c0;
-    }
-
-    hr {
-      border: 0;
-      height: 1px;
-      background: #ddd;
-      margin: 2rem 0;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    li {
-      background: #f0f4f8;
-      margin: 0.5rem 0;
-      padding: 0.8rem 1rem;
-      border-radius: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      transition: background 0.3s;
-    }
-
-    li:hover {
-      background: #e3f2fd;
-    }
-
-    footer {
-      text-align: center;
-      padding: 1rem;
-      background: #f1f1f1;
-      color: #555;
-      font-size: 0.9rem;
-      border-top: 1px solid #ddd;
-      margin-top: 3rem;
-    }
-
-    pre {
-      background: #212121;
-      color: #e0e0e0;
-      padding: 1rem;
-      border-radius: 8px;
-      overflow-x: auto;
-      font-size: 0.9rem;
-    }
-  </style>
+    <style>
+        .whisper-box {
+            margin-top: 40px;
+            padding: 20px;
+            border-radius: 12px;
+            background: #f5f5f5;
+        }
+        textarea {
+            width:100%;
+            min-height:150px;
+            padding:10px;
+            border-radius:10px;
+            border:1px solid #ccc;
+            font-size:15px;
+        }
+    </style>
 </head>
 
 <body>
-  <header>
-    <h1>Objets trouvés (API Omeka S)</h1>
-  </header>
 
-  <main>
-    <!-- --- Formulaire pour ajouter un objet --- -->
-    <section>
-      <h2>Ajouter un objet trouvé</h2>
-      <label>Nom de l’objet :</label>
-      <input type="text" id="nomObjet" placeholder="ex: téléphone noir">
-      <label>Lieu trouvé :</label>
-      <input type="text" id="lieuObjet" placeholder="ex: Bibliothèque">
-      <button id="ajouterBtn">Ajouter</button>
-    </section>
+<header>🎤 Devinci Lost & Found — Enregistrement Audio</header>
 
-    <hr>
+<div class="container">
 
-    <!-- --- Liste des objets trouvés --- -->
-    <section>
-      <h2>Liste des objets trouvés</h2>
-      <ul id="listeObjets"></ul>
-    </section>
+    <h2>Enregistrer un message audio</h2>
 
-    <pre id="resultCrea"></pre>
-  </main>
+    <label>Longitude</label>
+    <input id="lng" type="text">
 
-  <footer>
-    <p>&copy; 2025 Objets trouvés THYP</p>
-  </footer>
+    <label>Latitude</label>
+    <input id="lat" type="text">
 
-  <script type="module">
-    import { auth } from './modules/auth.js';
-    import { pa } from './modules/authParams.js';
+    <label>Nom du lieu</label>
+    <input id="place" type="text">
 
-    let a = new auth(pa);
-    a.getUser(u => console.log("Utilisateur connecté :", u));
+    <div id="recArea">En attente d’enregistrement…</div>
 
-    function chargerObjets() {
-      fetch(`${a.url}/items`, {
-        headers: a.headers()
-      })
-      .then(response => {
-        if (!response.ok) throw new Error('Erreur réseau');
-        return response.json();
-      })
-      .then(data => {
-        console.log("Données reçues:", data);
-        let ul = d3.select("#listeObjets").html("");
+    <button id="startBtn">Commencer</button>
+    <button id="stopBtn" disabled>Stop</button>
+    <button id="uploadBtn" disabled>Envoyer à Omeka S</button>
 
-        if (data && data.length > 0) {
-          ul.selectAll("li")
-            .data(data)
-            .enter()
-            .append("li")
-            .html(d => {
-              let title = "";
-              if (d["o:title"]) {
-                title = d["o:title"];
-              } else if (d["dcterms:title"]) {
-                title = Array.isArray(d["dcterms:title"]) ?
-                       d["dcterms:title"][0]["@value"] :
-                       d["dcterms:title"];
-              } else {
-                title = "Sans titre";
-              }
+    <!-- ⭐ WHISPER TRANSCRIPTION FORM ⭐ -->
+    <div class="whisper-box">
+        <h3>📝 Transcription du message (Whisper API)</h3>
 
-              let type = d["@type"] || "Type non spécifié";
-              let id = d["o:id"] || "";
+        <button id="transcribeBtn" disabled>Transcrire l’audio</button>
 
-              return `<div style="display: flex; justify-content: space-between; align-items: center;">
-                       <span><strong>${title}</strong> (ID: ${id})</span>
-                       <span style="color: #666; font-size: 0.9em;">${type}</span>
-                     </div>`;
-            });
-        } else {
-          ul.append("li").text("Aucun objet trouvé");
+        <label style="margin-top:10px; display:block;">Texte transcrit</label>
+        <textarea id="whisperText" placeholder="La transcription apparaîtra ici..."></textarea>
+    </div>
+
+</div>
+
+<!-- JS + MODULES -->
+<script src="js/d3.v7.min.js"></script>
+
+<script type="module">
+    import { pa } from "./modules/authParams.js";
+    import { omk } from "./modules/omk.js";
+    import Recorder from "./modules/simpleRecorder.js";
+
+    const O = new omk({
+        api: pa.apiOmk || pa.api || false,
+        ident: pa.ident || pa.key_identity || false,
+        key: pa.key || pa.key_credential || false,
+        mail: pa.mail || pa.email || false
+    });
+
+    let rec = new Recorder();
+    let blobAudio = null;
+
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const transcribeBtn = document.getElementById("transcribeBtn");
+    const whisperText = document.getElementById("whisperText");
+
+    startBtn.onclick = async () => {
+        rec.start();
+        document.getElementById("recArea").innerText = "🎙️ Enregistrement…";
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+    };
+
+    stopBtn.onclick = async () => {
+        blobAudio = await rec.stop();
+        document.getElementById("recArea").innerText = "✔️ Audio enregistré — prêt à envoyer";
+        stopBtn.disabled = true;
+        uploadBtn.disabled = false;
+        transcribeBtn.disabled = false;
+
+        let audioUrl = URL.createObjectURL(blobAudio);
+        let prev = document.getElementById('audioPreview');
+        if(!prev){
+            prev = document.createElement('audio');
+            prev.id = 'audioPreview';
+            prev.controls = true;
+            prev.className = 'w-full mb-4';
+            document.getElementById('recArea').insertAdjacentElement('afterend', prev);
         }
-      })
-      .catch(error => {
-        console.error('Erreur:', error);
-        d3.select("#listeObjets")
-          .html("<li style='color: red'>Erreur lors du chargement des objets</li>");
-      });
+        prev.src = audioUrl;
+    };
+
+    // ⭐ WHISPER TRANSCRIPTION ⭐
+    transcribeBtn.onclick = async () => {
+        if (!blobAudio) {
+            alert("Aucun audio à transcrire.");
+            return;
+        }
+
+        whisperText.value = "⏳ Transcription en cours...";
+
+        try {
+            // -----------------------------
+            // 🔥 CALL WHISPER API HERE
+            // -----------------------------
+            const fd = new FormData();
+            fd.append("file", blobAudio, "audio.webm");
+            fd.append("model", "whisper-1");
+
+            const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer VOTRE_API_KEY"
+                },
+                body: fd
+            });
+
+            const json = await res.json();
+            whisperText.value = json.text || "Erreur : aucune transcription reçue.";
+
+        } catch (err) {
+            whisperText.value = "❌ Erreur lors de la transcription : " + err;
+            console.error(err);
+        }
+    };
+
+    // ⭐ UPLOAD TO OMEKA S ⭐
+    uploadBtn.onclick = async () => {
+        const meta = {
+            "o:resource_template": "Lieu",
+            "dcterms:title": document.getElementById("place").value || 'Enregistrement audio',
+            "dcterms:description": [
+                whisperText.value || "Message audio",
+                "Latitude: " + (document.getElementById("lat").value || ''),
+                "Longitude: " + (document.getElementById("lng").value || '')
+            ].filter(Boolean).join(' | ')
+        };
+
+        if(!blobAudio){
+            alert('Aucun enregistrement disponible.');
+            return;
+        }
+
+        try{
+            const item = await O.createItem(meta);
+            if(!item){ alert("Erreur création item Omeka."); return; }
+
+            const id = item["o:id"];
+            await O.uploadMediaToItem(id, blobAudio);
+            alert("Audio + texte envoyés à Omeka !");
+        }catch(e){
+            alert("Erreur upload : " + e);
+        }
+    };
+
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    // Vérifie si la géolocalisation est supportée
+    if (!navigator.geolocation) {
+        console.warn("❌ La géolocalisation n'est pas supportée.");
+        return;
     }
 
-    chargerObjets();
+    navigator.geolocation.getCurrentPosition(
+        position => {
+            const lat = position.coords.latitude.toFixed(6);
+            const lng = position.coords.longitude.toFixed(6);
 
-    document.querySelector("#ajouterBtn").addEventListener("click", () => {
-      let nom = document.querySelector("#nomObjet").value.trim();
-      let lieu = document.querySelector("#lieuObjet").value.trim();
-      if (!nom) return alert("Veuillez entrer le nom de l’objet.");
+            document.getElementById("lat").value = lat;
+            document.getElementById("lng").value = lng;
 
-      let data = {
-        "o:resource_class": { "o:term": "dcterms:PhysicalObject" },
-        "dcterms:title": [{ "@value": nom, "@language": "fr" }],
-        "dcterms:spatial": [{ "@value": lieu, "@language": "fr" }],
-        "dcterms:description": [{ "@value": `Objet trouvé le ${new Date().toLocaleString()}` }]
-      };
+            console.log("📍 Position détectée :", lat, lng);
+        },
+        error => {
+            console.warn("⚠️ Erreur géolocalisation :", error.message);
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+        }
+    );
+});
+</script>
 
-      a.omk.createItem(data, i => {
-        console.log("Créé :", i);
-        d3.select("#resultCrea").text(JSON.stringify(i, null, 2));
-        chargerObjets();
-      });
-    });
-  </script>
 </body>
 </html>

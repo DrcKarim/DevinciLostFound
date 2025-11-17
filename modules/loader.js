@@ -18,10 +18,13 @@ export class loader {
                 </div>
             </div>
             `;
-            d3.select('#loading-container').remove();
-            main = d3.select('body').append('div')
-                .attr('id','loading-container').attr('tabindex',-1);
-            main.html(html);
+            main = d3.select('#loading-container');
+            if(!main.size()){
+                main = d3.select('body').append('div')
+                    .attr('id','loading-container').attr('tabindex',-1);
+                    main.html(html);
+
+            };
             loading = main.select("#ws-loading");
             me.hide(true);
         }

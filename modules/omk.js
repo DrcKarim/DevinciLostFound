@@ -7,7 +7,7 @@ export class omk {
         this.ident = params.ident ? params.ident : false;
         this.mail = params.mail ? params.mail : false;
         this.api = params.api ? params.api : false;
-        this.vocabs = params.vocabs ? params.vocabs : ['dcterms','fup8','foaf','dctype'];
+        this.vocabs = params.vocabs ? params.vocabs : ['dcterms','ma','oa','jdc','eqt','skos','foaf','fup8'];
         this.loader = new loader();
         this.user = false;
         this.props = [];
@@ -16,7 +16,6 @@ export class omk {
         this.items = [];
         this.resources = [];
         this.rts
-        this.anythingLLM = false;
         this.queries = [];
         let perPage = 100, types={'items':'o:item','media':'o:media'};
                 
@@ -120,33 +119,70 @@ export class omk {
         }
 
 
-        this.updateRessource = function (id, data, type='items', fd=null, m='PUT',cb=false, dataOri=false){
-            let oriData, newData, url = me.api+type+'/'+id+'?key_identity='+me.ident+'&key_credential='+me.key;
-            if(data){
-                //récupère les données originales
-                oriData = dataOri ? dataOri : me.getResourceType(id,type), 
-                newData = me.formatData(data,types[type]);
-                //met à jour les données
-                for (const p in newData) {
-                    if(p!='@type'){
-                        //vérifie si la propriété est dans les données originales                        
-                        if(oriData[p]){
-                            //m=="PUT" : on ajoute les nouvelles valeurs
-                            if(m=="PUT")oriData[p]=oriData[p].concat(newData[p]);
-                            //m=="PATCH" : on modifie les valeurs
-                            if(m=="PATCH")oriData[p]=newData[p];          
-                        }else{
-                            //ajoute la nouvelle propriété dans les données
-                            oriData[p]=newData[p];
-                        }     
-                    }
-                }
-            }
-            postData({'u':url,'m':m}, fd ? fd : oriData).then((rs) => {
-                me.items[rs['o:id']]=rs;
-                if(cb)cb(rs);
-            });
+        this.uploadMediaToItem = function (itemId, fileBlob, cb=false){
+            // Direct upload of media blob to /api/media using Omeka S expected fields
+            let url = me.api+'media?key_identity='+me.ident+'&key_credential='+me.key;
+            let formData = new FormData();
+            // Add file under common variations (file[0] used by many Omeka installs)
+            formData.append('file[0]', fileBlob, 'audio.webm');
+            formData.append('file[1]', fileBlob, 'audio.webm');
+            // Provide the resource data as JSON in the `data` field so Omeka can parse it
+            let mediaData = {"o:ingester":"upload"};
+            if(itemId) mediaData['o:item'] = [{"o:id": itemId}];
+            formData.append('data', JSON.stringify(mediaData));
 
+            return fetch(url, {
+                method: 'POST',
+                mode: 'cors',
+                credentials: 'same-origin',
+                body: formData
+            }).then(async response => {
+                console.log('uploadMediaToItem response status:', response.status);
+                let text = await response.text();
+                // Try to parse JSON, otherwise log raw response for debugging
+                try{
+                    const json = JSON.parse(text || 'null');
+                    if(!response.ok){
+                        console.error('uploadMediaToItem response body (JSON):', json);
+                        throw new Error('Media upload failed: ' + response.status);
+                    }
+                    return json;
+                }catch(e){
+                    console.warn('uploadMediaToItem: non-JSON response body:', text);
+                    if(!response.ok){
+                        throw new Error('Media upload failed: ' + response.status + ' - ' + text);
+                    }
+                    return null;
+                }
+            }).then(media => {
+                console.log('Media uploaded (parsed):', media);
+                if(media && media['o:id']){
+                    me.medias[media['o:id']] = media;
+                    // Link media to item (PUT items/{id})
+                    if(itemId){
+                        let linkUrl = me.api+'items/'+itemId+'?key_identity='+me.ident+'&key_credential='+me.key;
+                        let itemData = me.getItem(itemId);
+                        if(!itemData['o:media']) itemData['o:media'] = [];
+                        itemData['o:media'].push({'o:id': media['o:id']});
+                        return fetch(linkUrl, {
+                            method: 'PUT',
+                            mode: 'cors',
+                            credentials: 'same-origin',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(itemData)
+                        }).then(r => {
+                            if(cb)cb(media);
+                            return media;
+                        });
+                    }
+                    if(cb)cb(media);
+                }
+                return media;
+            }).catch(err => {
+                console.error('uploadMediaToItem error:', err);
+                if(cb)cb(null);
+                throw err;
+            });
         }        
 
         this.getItem = function (id, cb=false){
@@ -236,13 +272,13 @@ export class omk {
             d3.json(url).then((data) => {
                 me.user = data.length ? data[0] : false;
                 //TODO: mieux gérer anythingLLM Login
-                me.user.anythingLLM = me.anythingLLM ? syncRequest(me.api.replace('api/','s/cours-bnf/page/ajax?json=1&helper=anythingLLMlogin')) : false;
+                //me.user.anythingLLM = syncRequest(me.api.replace('api/','s/cours-bnf/page/ajax?json=1&helper=anythingLLMlogin'));
                 if(cb)cb(me.user);
             });
 
         }
 
-        this.createItem = function (data, cb=false, verifDoublons){
+        this.createItem = function (data, cb=false, verifDoublons, file){
             if(verifDoublons){
                 let items = me.searchItems(verifDoublons);
                 if(items.length){
@@ -251,9 +287,78 @@ export class omk {
                 }
             }
             let url = me.api+'items?key_identity='+me.ident+'&key_credential='+me.key;
-            postData({'u':url,'m':'POST'}, me.formatData(data)).then((rs) => {
-                me.items[rs['o:id']]=rs;
-                if(cb)cb(rs);
+            // Create minimal item data (no resource_template to avoid issues)
+            let itemData = {
+                "@type": "o:Item",
+                "dcterms:title": [{
+                    "type": "literal",
+                    "property_id": me.getPropId('dcterms:title'),
+                    "@value": data['dcterms:title'] || 'Audio Recording'
+                }],
+                "dcterms:description": [{
+                    "type": "literal",
+                    "property_id": me.getPropId('dcterms:description'),
+                    "@value": data['dcterms:description'] || 'Audio recorded via DevinciLostFound'
+                }]
+            };
+        
+            return fetch(url, {
+                method: 'POST',
+                mode: 'cors',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(itemData)
+            }).then(async response => {
+                console.log('createItem response status:', response.status);
+                if(!response.ok) throw new Error('Item creation failed: ' + response.status);
+                
+                // Try to parse JSON response first
+                let text = await response.text();
+                let item = null;
+                try {
+                    item = JSON.parse(text || 'null');
+                } catch(e) {
+                    console.warn('createItem: response body not JSON, trying Location header...');
+                }
+                
+                // If no JSON, try Location header (Omeka may return 201 with empty body + Location)
+                if(!item){
+                    let location = response.headers.get('location');
+                    if(location){
+                        console.log('createItem: fetching from Location header:', location);
+                        item = await fetch(location, {mode: 'cors'}).then(r => r.json()).catch(() => null);
+                    }
+                }
+                
+                if(item && item['o:id']){
+                    console.log('createItem success, item ID:', item['o:id']);
+                    me.items[item['o:id']] = item;
+                    if(cb)cb(item);
+                    return item;
+                }
+                
+                // Last resort: fetch most recent item
+                console.warn('createItem: no item from response or Location, fetching most recent...');
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        try {
+                            let recent = me.getAllItems('sort_by=created&sort_order=desc&per_page=1');
+                            if(recent && recent.length > 0){
+                                console.log('createItem: using most recent item, ID:', recent[0]['o:id']);
+                                if(cb)cb(recent[0]);
+                                resolve(recent[0]);
+                            }else{
+                                console.error('createItem: could not fetch any recent items');
+                                if(cb)cb(null);
+                                resolve(null);
+                            }
+                        }catch(e){
+                            console.error('createItem: error fetching recent items', e);
+                            if(cb)cb(null);
+                            resolve(null);
+                        }
+                    }, 800);
+                });
             });
         }
 
@@ -302,7 +407,7 @@ export class omk {
                             if(!fd[p.term])fd[p.term]=[];
                             fd[p.term].push(formatValue(p,d));                                    
                         })
-                        break;                    
+                        break;     
                     default:
                         if(!fd[k])fd[k]=[];
                         p = me.props.filter(prp=>prp['o:term']==k)[0];
@@ -315,22 +420,19 @@ export class omk {
             }                         
             return fd;
         }
-        this.valueFormat = function(p,v){
-            return formatValue(p,v);
-        }
         function formatValue(p,v){
             if(typeof v === 'object' && v.rid)
                 return {"property_id": p['o:id'], "value_resource_id" : v.rid, "type" : "resource" };    
-            else if(typeof v === 'object' && v.a)
-                return {"property_id": p['o:id'], "@value" : v.v, "type" : "literal", "@annotation":v.a};    
             else if(typeof v === 'object' && v.u)
                 return {"property_id": p['o:id'], "@id" : v.u, "o:label":v.l, "type" : "uri" };    
+            else if(typeof v === 'object' && v.geo)
+                return {"property_id": p['o:id'], "@value" : v.geo, "type" : "geography:coordinates" };    
             else if(typeof v === 'object')
                 return {"property_id": p['o:id'], "@value" : JSON.stringify(v), "type" : "literal" };    
             else
                 return {"property_id": p['o:id'], "@value" : v, "type" : "literal" };    
         }
-
+        
         async function postData(url, data = {},file) {
             // Default options are marked with *
             let bodyData, 
@@ -357,7 +459,25 @@ export class omk {
             }
             const response = await fetch(url.u, options);
             me.loader.hide(true);
-            return response.json(); // parses JSON response into native JavaScript objects
+            // If response has JSON content, return parsed JSON
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.indexOf('application/json') !== -1) {
+                return response.json();
+            }
+            // If server returned 201 Created with Location header but no JSON body,
+            // follow the Location to GET the created resource (Omeka may behave this way).
+            if ((response.status === 201 || response.status === 200) && response.headers.get('location')) {
+                const loc = response.headers.get('location');
+                try {
+                    const r2 = await fetch(loc, { method: 'GET', mode: 'cors' });
+                    const ct2 = r2.headers.get('content-type') || '';
+                    if (ct2.indexOf('application/json') !== -1) return r2.json();
+                } catch (e) {
+                    // ignore and fallthrough to return null
+                }
+            }
+            // No JSON available, return null so callers can fallback
+            return null;
         }        
 
         this.getSiteViewRequest = function(q,cb){
