@@ -118,8 +118,56 @@ export class omk {
             return rs;
         }
 
+  this.uploadMediaToItem = function (itemId, fileBlob, cb = false) {
+    let url = me.api + 'media?key_identity=' + me.ident + '&key_credential=' + me.key;
 
-        this.uploadMediaToItem = function (itemId, fileBlob, cb=false){
+    let formData = new FormData();
+
+    // ✅ Un seul fichier, index 0
+    formData.append('file[0]', fileBlob, 'audio.webm');
+
+    // ✅ Données media correctes
+    let mediaData = {
+        "o:ingester": "upload",
+        "o:item": { "o:id": itemId }   // ✅ objet et pas tableau
+    };
+
+    formData.append('data', JSON.stringify(mediaData));
+
+    return fetch(url, {
+        method: 'POST',
+        mode: 'cors',
+        credentials: 'same-origin',
+        body: formData
+    }).then(async response => {
+        console.log('uploadMediaToItem response status:', response.status);
+        const text = await response.text();
+
+        if (!response.ok) {
+            console.error('uploadMediaToItem response body:', text);
+            throw new Error('Media upload failed: ' + response.status + ' - ' + text);
+        }
+
+        let media = null;
+        try {
+            media = JSON.parse(text);
+        } catch (e) {
+            console.warn('uploadMediaToItem: non-JSON response body:', text);
+        }
+
+        if (media && media['o:id']) {
+            me.medias[media['o:id']] = media;
+        }
+
+        if (cb) cb(media);
+        return media;
+    }).catch(err => {
+        console.error('uploadMediaToItem error:', err);
+        if (cb) cb(null);
+        throw err;
+    });
+};
+      /*  this.uploadMediaToItem = function (itemId, fileBlob, cb=false){
             // Direct upload of media blob to /api/media using Omeka S expected fields
             let url = me.api+'media?key_identity='+me.ident+'&key_credential='+me.key;
             let formData = new FormData();
@@ -183,7 +231,7 @@ export class omk {
                 if(cb)cb(null);
                 throw err;
             });
-        }        
+        }        */
 
         this.getItem = function (id, cb=false){
             if(me.items[id])return me.items[id];
