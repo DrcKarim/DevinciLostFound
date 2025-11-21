@@ -2,210 +2,179 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Devinci Lost & Found — Enregistreur Audio</title>
-
-    <!-- NEW modern CSS -->
+    <title>Devinci Lost & Found — Déclaration d'objet trouvé</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    
     <link rel="stylesheet" href="assets/css/app.css">
 
-    <!-- Required JS -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-
     <style>
-        .whisper-box {
-            margin-top: 40px;
-            padding: 20px;
-            border-radius: 12px;
-            background: #f5f5f5;
+        .dropzone {
+            border: 2px dashed #2F7CF6;
+            background: #f0f6ff;
+            padding: 30px;
+            text-align: center;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: 0.3s;
         }
-        textarea {
-            width:100%;
-            min-height:150px;
-            padding:10px;
-            border-radius:10px;
-            border:1px solid #ccc;
-            font-size:15px;
+        .dropzone.dragover {
+            background: #dceaff;
+            border-color: #1a5edc;
+        }
+        #preview {
+            margin-top: 15px;
+            max-width: 300px;
+            border-radius: 10px;
+            display: none;
+        }
+        input, button {
+            margin-bottom: 18px;
         }
     </style>
 </head>
 
 <body>
 
-<header>🎤 Devinci Lost & Found — Enregistrement Audio</header>
+<header>📍 Devinci Lost & Found — Déclarer un objet trouvé</header>
 
 <div class="container">
 
-    <h2>Enregistrer un message audio</h2>
+    <h2>Ajouter un objet trouvé</h2>
+
+    <label>Nom de l’objet</label>
+    <input id="title" type="text" placeholder="Ex : Portefeuille, Clés, Casque..." />
+
+    <label>Numéro du trouveur</label>
+    <input id="phone" type="text" placeholder="06 XX XX XX XX" />
 
     <label>Longitude</label>
-    <input id="lng" type="text">
+    <input id="lng" type="text" disabled/>
 
     <label>Latitude</label>
-    <input id="lat" type="text">
+    <input id="lat" type="text" disabled/>
 
-    <label>Nom du lieu</label>
-    <input id="place" type="text">
-
-    <div id="recArea">En attente d’enregistrement…</div>
-
-    <button id="startBtn">Commencer</button>
-    <button id="stopBtn" disabled>Stop</button>
-    <button id="uploadBtn" disabled>Envoyer à Omeka S</button>
-
-    <!-- ⭐ WHISPER TRANSCRIPTION FORM ⭐ -->
-    <div class="whisper-box">
-        <h3>📝 Transcription du message (Whisper API)</h3>
-
-        <button id="transcribeBtn" disabled>Transcrire l’audio</button>
-
-        <label style="margin-top:10px; display:block;">Texte transcrit</label>
-        <textarea id="whisperText" placeholder="La transcription apparaîtra ici..."></textarea>
+    <h3>📸 Photo de l’objet</h3>
+    <div id="dropzone" class="dropzone">
+        Glissez-déposez une image ici<br>
+        ou cliquez pour choisir une photo
     </div>
+    <img id="preview" />
 
+    <button id="sendBtn" disabled>Envoyer à Omeka S</button>
 </div>
 
-<!-- JS + MODULES -->
-<script src="js/d3.v7.min.js"></script>
 
 <script type="module">
     import { pa } from "./modules/authParams.js";
     import { omk } from "./modules/omk.js";
-    import Recorder from "./modules/simpleRecorder.js";
 
     const O = new omk({
-        api: pa.apiOmk || pa.api || false,
-        ident: pa.ident || pa.key_identity || false,
-        key: pa.key || pa.key_credential || false,
-        mail: pa.mail || pa.email || false
+        api: pa.apiOmk || pa.api,
+        ident: pa.ident,
+        key: pa.key,
+        mail: pa.mail
     });
 
-    let rec = new Recorder();
-    let blobAudio = null;
+    let selectedFile = null;
 
-    const startBtn = document.getElementById("startBtn");
-    const stopBtn = document.getElementById("stopBtn");
-    const uploadBtn = document.getElementById("uploadBtn");
-    const transcribeBtn = document.getElementById("transcribeBtn");
-    const whisperText = document.getElementById("whisperText");
+    const dropzone = document.getElementById("dropzone");
+    const preview = document.getElementById("preview");
+    const sendBtn = document.getElementById("sendBtn");
 
-    startBtn.onclick = async () => {
-        rec.start();
-        document.getElementById("recArea").innerText = "🎙️ Enregistrement…";
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
-    };
-
-    stopBtn.onclick = async () => {
-        blobAudio = await rec.stop();
-        document.getElementById("recArea").innerText = "✔️ Audio enregistré — prêt à envoyer";
-        stopBtn.disabled = true;
-        uploadBtn.disabled = false;
-        transcribeBtn.disabled = false;
-
-        let audioUrl = URL.createObjectURL(blobAudio);
-        let prev = document.getElementById('audioPreview');
-        if(!prev){
-            prev = document.createElement('audio');
-            prev.id = 'audioPreview';
-            prev.controls = true;
-            prev.className = 'w-full mb-4';
-            document.getElementById('recArea').insertAdjacentElement('afterend', prev);
-        }
-        prev.src = audioUrl;
-    };
-
-    // ⭐ WHISPER TRANSCRIPTION ⭐
-    transcribeBtn.onclick = async () => {
-        if (!blobAudio) {
-            alert("Aucun audio à transcrire.");
+    // 📌 Unified handle logic
+    function handleFile(file) {
+        if (!file || !file.type.startsWith("image/")) {
+            alert("Veuillez choisir une image valide.");
             return;
         }
 
-        whisperText.value = "⏳ Transcription en cours...";
+        // Guarantee real File with name
+        selectedFile = new File([file], file.name || "image.jpg", {
+            type: file.type
+        });
 
-        try {
-            // -----------------------------
-            // 🔥 CALL WHISPER API HERE
-            // -----------------------------
-            const fd = new FormData();
-            fd.append("file", blobAudio, "audio.webm");
-            fd.append("model", "whisper-1");
+        preview.src = URL.createObjectURL(selectedFile);
+        preview.style.display = "block";
 
-            const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-                method: "POST",
-                headers: {
-                    "Authorization": "Bearer VOTRE_API_KEY"
-                },
-                body: fd
-            });
-
-            const json = await res.json();
-            whisperText.value = json.text || "Erreur : aucune transcription reçue.";
-
-        } catch (err) {
-            whisperText.value = "❌ Erreur lors de la transcription : " + err;
-            console.error(err);
-        }
-    };
-
-    // ⭐ UPLOAD TO OMEKA S ⭐
-    uploadBtn.onclick = async () => {
-        const meta = {
-            "o:resource_template": "Lieu",
-            "dcterms:title": document.getElementById("place").value || 'Enregistrement audio',
-            "dcterms:description": [
-                whisperText.value || "Message audio",
-                "Latitude: " + (document.getElementById("lat").value || ''),
-                "Longitude: " + (document.getElementById("lng").value || '')
-            ].filter(Boolean).join(' | ')
-        };
-
-        if(!blobAudio){
-            alert('Aucun enregistrement disponible.');
-            return;
-        }
-
-        try{
-            const item = await O.createItem(meta);
-            if(!item){ alert("Erreur création item Omeka."); return; }
-
-            const id = item["o:id"];
-            await O.uploadMediaToItem(id, blobAudio);
-            alert("Audio + texte envoyés à Omeka !");
-        }catch(e){
-            alert("Erreur upload : " + e);
-        }
-    };
-
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-
-    // Vérifie si la géolocalisation est supportée
-    if (!navigator.geolocation) {
-        console.warn("❌ La géolocalisation n'est pas supportée.");
-        return;
+        sendBtn.disabled = false;
     }
 
-    navigator.geolocation.getCurrentPosition(
-        position => {
-            const lat = position.coords.latitude.toFixed(6);
-            const lng = position.coords.longitude.toFixed(6);
+    // 📌 Click → open file selector
+    dropzone.addEventListener("click", () => {
+        let input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.onchange = e => handleFile(e.target.files[0]);
+        input.click();
+    });
 
-            document.getElementById("lat").value = lat;
-            document.getElementById("lng").value = lng;
+    // 📌 Drag & drop behavior
+    dropzone.addEventListener("dragover", e => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+    });
 
-            console.log("📍 Position détectée :", lat, lng);
-        },
-        error => {
-            console.warn("⚠️ Erreur géolocalisation :", error.message);
-        },
-        {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
+    dropzone.addEventListener("dragleave", () => {
+        dropzone.classList.remove("dragover");
+    });
+
+    dropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+        handleFile(e.dataTransfer.files[0]);
+    });
+
+    // 📌 Send to Omeka
+    sendBtn.onclick = async () => {
+        if (!selectedFile) {
+            alert("Aucune image à envoyer.");
+            return;
         }
+
+        const title = document.getElementById("title").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+        const lat = document.getElementById("lat").value;
+        const lng = document.getElementById("lng").value;
+
+        if (!title) return alert("Veuillez entrer un nom d’objet.");
+        if (!phone) return alert("Veuillez entrer le numéro du trouveur.");
+
+        const desc = 
+            `Objet trouvé.\n` +
+            `Téléphone du trouveur : ${phone}\n` +
+            `Localisation : lat=${lat}, lng=${lng}`;
+
+        const data = {
+            "dcterms:title": title,
+            "dcterms:description": desc
+        };
+
+        try {
+            const item = await O.createItem(data);
+            if (!item) { alert("Erreur lors de la création."); return; }
+
+            const id = item["o:id"];
+
+            await O.uploadMediaToItem(id, selectedFile);
+
+            alert("Objet envoyé à Omeka S !");
+            window.location.reload();
+
+        } catch(e) {
+            alert("Erreur Upload : " + e);
+        }
+    };
+
+    // 📌 Auto geolocation
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            document.getElementById("lat").value = pos.coords.latitude.toFixed(6);
+            document.getElementById("lng").value = pos.coords.longitude.toFixed(6);
+        },
+        err => console.warn("Geolocation error:", err),
+        { enableHighAccuracy: true }
     );
-});
+
 </script>
 
 </body>

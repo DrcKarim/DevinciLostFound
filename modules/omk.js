@@ -119,6 +119,44 @@ export class omk {
             return rs;
         }
 
+    this.uploadMediaToItem = function (itemId, fileBlob, cb = false) {
+    const url = me.api + 'media?key_identity=' + me.ident + '&key_credential=' + me.key;
+
+    const fd = new FormData();
+
+    // ⭐ OBLIGATOIRE POUR OMEKA S ⭐
+    fd.append("file_index", "0");
+    fd.append("file[0]", fileBlob, fileBlob.name || "upload.jpg");
+
+    // ⭐ Structure EXACTE attendue par Omeka S ⭐
+    const data = {
+        "o:ingester": "upload",
+        "o:item": { "o:id": itemId }
+    };
+
+    fd.append("data", JSON.stringify(data));
+
+    return fetch(url, {
+        method: "POST",
+        body: fd
+    })
+        .then(async (response) => {
+            const text = await response.text();
+            console.log("uploadMediaToItem status:", response.status);
+            console.log("uploadMediaToItem body:", text);
+
+            if (!response.ok) {
+                throw new Error("Media upload failed: " + response.status + " - " + text);
+            }
+
+            try {
+                return JSON.parse(text);
+            } catch {
+                return text;
+            }
+        });
+};
+ /*
   this.uploadMediaToItem = function (itemId, fileBlob, cb = false) {
     let url = me.api + 'media?key_identity=' + me.ident + '&key_credential=' + me.key;
 
@@ -166,8 +204,8 @@ export class omk {
         console.error('uploadMediaToItem error:', err);
         if (cb) cb(null);
         throw err;
-    });
-};
+    }); 
+}; */
       /*  this.uploadMediaToItem = function (itemId, fileBlob, cb=false){
             // Direct upload of media blob to /api/media using Omeka S expected fields
             let url = me.api+'media?key_identity='+me.ident+'&key_credential='+me.key;
