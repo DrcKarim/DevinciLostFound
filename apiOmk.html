@@ -37,31 +37,54 @@
 
 <header>📍 Devinci Lost & Found — Déclarer un objet trouvé</header>
 
-<div class="container">
+<div class="split-container">
 
-    <h2>Ajouter un objet trouvé</h2>
+    <!-- ================= LEFT =================== -->
+    <div class="left-panel">
+        <h2>Ajouter un objet trouvé</h2>
 
-    <label>Nom de l’objet</label>
-    <input id="title" type="text" placeholder="Ex : Portefeuille, Clés, Casque..." />
+        <label>Nom de l’objet</label>
+        <input id="title" type="text" placeholder="Ex : Portefeuille, Clés, Casque..." />
 
-    <label>Numéro du trouveur</label>
-    <input id="phone" type="text" placeholder="06 XX XX XX XX" />
+        <label>Numéro du trouveur</label>
+        <input id="phone" type="text" placeholder="06 XX XX XX XX" />
 
-    <label>Longitude</label>
-    <input id="lng" type="text" disabled/>
+        <label>Longitude</label>
+        <input id="lng" type="text" disabled/>
 
-    <label>Latitude</label>
-    <input id="lat" type="text" disabled/>
+        <label>Latitude</label>
+        <input id="lat" type="text" disabled/>
 
-    <h3>📸 Photo de l’objet</h3>
-    <div id="dropzone" class="dropzone">
-        Glissez-déposez une image ici<br>
-        ou cliquez pour choisir une photo
+        <h3>📸 Photo de l’objet</h3>
+        <div id="dropzone" class="dropzone">
+            Glissez-déposez une image ici<br>
+            ou cliquez pour choisir une photo
+        </div>
+        <img id="preview" />
+
+        <button id="sendBtn" disabled>Envoyer à Omeka S</button>
     </div>
-    <img id="preview" />
 
-    <button id="sendBtn" disabled>Envoyer à Omeka S</button>
+
+    <!-- ================= RIGHT =================== -->
+    <div class="right-panel">
+        <h2>Rechercher votre objet perdu</h2>
+
+        <label>Titre de l’objet perdu</label>
+        <input id="lostTitle" type="text" placeholder="Ex : Portefeuille noir..." />
+
+        <label>Description</label>
+        <textarea id="lostDescription" placeholder="Décrivez votre objet..."></textarea>
+
+        <button id="searchLostBtn">Rechercher</button>
+
+        <div id="searchResult" class="result-box">
+            <p class="placeholder">Les résultats apparaîtront ici…</p>
+        </div>
+    </div>
+
 </div>
+
 
 
 <script type="module">
@@ -174,6 +197,50 @@
         err => console.warn("Geolocation error:", err),
         { enableHighAccuracy: true }
     );
+
+
+    // --------- IA Search Lost Item -----------
+
+document.getElementById("searchLostBtn").onclick = async () => {
+    const title = document.getElementById("lostTitle").value.trim();
+    const desc = document.getElementById("lostDescription").value.trim();
+    const box = document.getElementById("searchResult");
+
+    if (!desc) {
+        box.innerHTML = "<p>Veuillez entrer une description.</p>";
+        return;
+    }
+
+    box.innerHTML = "<p>⏳ Recherche en cours...</p>";
+
+    try {
+        const response = await fetch("/api/match-lost-object", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ title, description: desc })
+        });
+
+        const result = await response.json();
+
+        if (!result.found) {
+            box.innerHTML = "<p>❌ Aucun objet correspondant n’a été trouvé.</p>";
+            return;
+        }
+
+        const item = result.item;
+
+        box.innerHTML = `
+            <h3>✔ Objet trouvé !</h3>
+            <p><b>Nom :</b> ${item.title}</p>
+            <p><b>Description :</b> ${item.description}</p>
+            <p><b>Localisation :</b> ${item.lat}, ${item.lng}</p>
+            <p><b>Contact du trouveur :</b> ${item.phone}</p>
+        `;
+    }
+    catch(e) {
+        box.innerHTML = "<p>⚠️ Erreur serveur</p>";
+    }
+};
 
 </script>
 

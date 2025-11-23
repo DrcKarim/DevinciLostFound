@@ -119,42 +119,38 @@ export class omk {
             return rs;
         }
 
-    this.uploadMediaToItem = function (itemId, fileBlob, cb = false) {
+this.uploadMediaToItem = function (itemId, fileBlob) {
+
     const url = me.api + 'media?key_identity=' + me.ident + '&key_credential=' + me.key;
 
     const fd = new FormData();
 
-    // ⭐ OBLIGATOIRE POUR OMEKA S ⭐
-    fd.append("file_index", "0");
-    fd.append("file[0]", fileBlob, fileBlob.name || "upload.jpg");
+    // ⭐ FILE ALWAYS NEEDS A REAL NAME ⭐
+    const realFile = new File([fileBlob], fileBlob.name || "photo.jpg", {
+        type: fileBlob.type || "image/jpeg"
+    });
 
-    // ⭐ Structure EXACTE attendue par Omeka S ⭐
+    // ⭐ REQUIRED FORMAT ⭐
+    fd.append("file[0]", realFile);
+    
     const data = {
         "o:ingester": "upload",
+        "file_index": "0",
         "o:item": { "o:id": itemId }
     };
 
     fd.append("data", JSON.stringify(data));
 
     return fetch(url, {
-        method: "POST",
+        method: 'POST',
         body: fd
     })
-        .then(async (response) => {
-            const text = await response.text();
-            console.log("uploadMediaToItem status:", response.status);
-            console.log("uploadMediaToItem body:", text);
-
-            if (!response.ok) {
-                throw new Error("Media upload failed: " + response.status + " - " + text);
-            }
-
-            try {
-                return JSON.parse(text);
-            } catch {
-                return text;
-            }
-        });
+    .then(async r => {
+        const text = await r.text();
+        console.log("Upload status:", r.status, text);
+        if (!r.ok) throw new Error("Upload failed: " + r.status + " " + text);
+        return JSON.parse(text);
+    });
 };
  /*
   this.uploadMediaToItem = function (itemId, fileBlob, cb = false) {
