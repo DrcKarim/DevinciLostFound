@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Devinci Lost & Found — Déclaration d'objet trouvé</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    
+   <script src="https://d3js.org/d3.v7.min.js"></script>
     <link rel="stylesheet" href="assets/css/app.css">
 
     <style>
@@ -27,9 +26,18 @@
             border-radius: 10px;
             display: none;
         }
-        input, button {
+        input, button, textarea {
             margin-bottom: 18px;
         }
+        .input-textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #d0d0d0;
+            font-size: 15px;
+            min-height: 90px;
+            resize: vertical;
+    }
     </style>
 </head>
 
@@ -39,34 +47,32 @@
 
 <div class="split-container">
 
-    <!-- ================= LEFT =================== -->
+    <!-- ================= LEFT PANEL (FINDER) =================== -->
     <div class="left-panel">
         <h2>Ajouter un objet trouvé</h2>
 
         <label>Nom de l’objet</label>
         <input id="title" type="text" placeholder="Ex : Portefeuille, Clés, Casque..." />
 
+        <label>Description de l’objet trouvé</label>
+        <textarea id="foundDescription" class="input-textarea" placeholder="Décrivez l’objet trouvé ici..."></textarea>
+
         <label>Numéro du trouveur</label>
         <input id="phone" type="text" placeholder="06 XX XX XX XX" />
 
-        <label>Longitude</label>
-        <input id="lng" type="text" disabled/>
+        <label>Trouvé par</label>
+        <input id="nom" type="text" placeholder="Ex : Mike, Jhon, Jeremy..." />
 
-        <label>Latitude</label>
-        <input id="lat" type="text" disabled/>
+        <label>Lieu de perte</label>
+        <input id="lieu" type="text" placeholder="Ex : Salle200, Caffe, Amphie..." />
 
-        <h3>📸 Photo de l’objet</h3>
-        <div id="dropzone" class="dropzone">
-            Glissez-déposez une image ici<br>
-            ou cliquez pour choisir une photo
-        </div>
-        <img id="preview" />
+        <button id="sendTextBtn">📩 Envoyer à Omeka S</button>
 
-        <button id="sendBtn" disabled>Envoyer à Omeka S</button>
+        <p style="margin-top:10px; opacity: 0.6;">✨ Votre description sera utilisée pour faire correspondre les objets perdus.</p>
     </div>
 
 
-    <!-- ================= RIGHT =================== -->
+    <!-- ================= RIGHT PANEL (OWNER SEARCH) =================== -->
     <div class="right-panel">
         <h2>Rechercher votre objet perdu</h2>
 
@@ -74,9 +80,9 @@
         <input id="lostTitle" type="text" placeholder="Ex : Portefeuille noir..." />
 
         <label>Description</label>
-        <textarea id="lostDescription" placeholder="Décrivez votre objet..."></textarea>
+        <textarea id="lostDescription" placeholder="Décrivez votre objet perdu ici..."></textarea>
 
-        <button id="searchLostBtn">Rechercher</button>
+        <button id="searchLostBtn">🔍 Rechercher</button>
 
         <div id="searchResult" class="result-box">
             <p class="placeholder">Les résultats apparaîtront ici…</p>
@@ -98,72 +104,21 @@
         mail: pa.mail
     });
 
-    let selectedFile = null;
+    // ----------------------------- SEND FOUND OBJECT --------------------------------
 
-    const dropzone = document.getElementById("dropzone");
-    const preview = document.getElementById("preview");
-    const sendBtn = document.getElementById("sendBtn");
-
-    // 📌 Unified handle logic
-    function handleFile(file) {
-        if (!file || !file.type.startsWith("image/")) {
-            alert("Veuillez choisir une image valide.");
-            return;
-        }
-
-        // Guarantee real File with name
-        selectedFile = new File([file], file.name || "image.jpg", {
-            type: file.type
-        });
-
-        preview.src = URL.createObjectURL(selectedFile);
-        preview.style.display = "block";
-
-        sendBtn.disabled = false;
-    }
-
-    // 📌 Click → open file selector
-    dropzone.addEventListener("click", () => {
-        let input = document.createElement("input");
-        input.type = "file";
-        input.accept = "image/*";
-        input.onchange = e => handleFile(e.target.files[0]);
-        input.click();
-    });
-
-    // 📌 Drag & drop behavior
-    dropzone.addEventListener("dragover", e => {
-        e.preventDefault();
-        dropzone.classList.add("dragover");
-    });
-
-    dropzone.addEventListener("dragleave", () => {
-        dropzone.classList.remove("dragover");
-    });
-
-    dropzone.addEventListener("drop", (e) => {
-        e.preventDefault();
-        dropzone.classList.remove("dragover");
-        handleFile(e.dataTransfer.files[0]);
-    });
-
-    // 📌 Send to Omeka
-    sendBtn.onclick = async () => {
-        if (!selectedFile) {
-            alert("Aucune image à envoyer.");
-            return;
-        }
-
+       document.getElementById("sendTextBtn").onclick = async () => {
         const title = document.getElementById("title").value.trim();
         const phone = document.getElementById("phone").value.trim();
+        const description = document.getElementById("foundDescription").value.trim();
         const lat = document.getElementById("lat").value;
         const lng = document.getElementById("lng").value;
 
         if (!title) return alert("Veuillez entrer un nom d’objet.");
+        if (!description) return alert("Veuillez décrire l’objet trouvé.");
         if (!phone) return alert("Veuillez entrer le numéro du trouveur.");
 
         const desc = 
-            `Objet trouvé.\n` +
+            `Objet trouvé : ${description}\n` +
             `Téléphone du trouveur : ${phone}\n` +
             `Localisation : lat=${lat}, lng=${lng}`;
 
@@ -174,74 +129,70 @@
 
         try {
             const item = await O.createItem(data);
-            if (!item) { alert("Erreur lors de la création."); return; }
+            if (!item) return alert("Erreur lors de la création sur Omeka.");
 
-            const id = item["o:id"];
-
-            await O.uploadMediaToItem(id, selectedFile);
-
-            alert("Objet envoyé à Omeka S !");
+            alert("✔ Objet déclaré avec succès !");
             window.location.reload();
-
-        } catch(e) {
-            alert("Erreur Upload : " + e);
+        }
+        catch (e) {
+         //   alert("Erreur : " + e);
         }
     };
 
-    // 📌 Auto geolocation
-    navigator.geolocation.getCurrentPosition(
+    // ----------------------------- AUTO GEOLOCATION --------------------------------
+
+   /* navigator.geolocation.getCurrentPosition(
         pos => {
             document.getElementById("lat").value = pos.coords.latitude.toFixed(6);
             document.getElementById("lng").value = pos.coords.longitude.toFixed(6);
         },
         err => console.warn("Geolocation error:", err),
         { enableHighAccuracy: true }
-    );
+    ); */
 
 
-    // --------- IA Search Lost Item -----------
+    // ------------------------------- AI SEARCH LOST OBJECT ---------------------------
 
-document.getElementById("searchLostBtn").onclick = async () => {
-    const title = document.getElementById("lostTitle").value.trim();
-    const desc = document.getElementById("lostDescription").value.trim();
-    const box = document.getElementById("searchResult");
+    document.getElementById("searchLostBtn").onclick = async () => {
+        const title = document.getElementById("lostTitle").value.trim();
+        const desc = document.getElementById("lostDescription").value.trim();
+        const box = document.getElementById("searchResult");
 
-    if (!desc) {
-        box.innerHTML = "<p>Veuillez entrer une description.</p>";
-        return;
-    }
-
-    box.innerHTML = "<p>⏳ Recherche en cours...</p>";
-
-    try {
-        const response = await fetch("/api/match-lost-object", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ title, description: desc })
-        });
-
-        const result = await response.json();
-
-        if (!result.found) {
-            box.innerHTML = "<p>❌ Aucun objet correspondant n’a été trouvé.</p>";
+        if (!desc) {
+            box.innerHTML = "<p>Veuillez entrer une description.</p>";
             return;
         }
 
-        const item = result.item;
+        box.innerHTML = "<p>⏳ Recherche en cours...</p>";
 
-        box.innerHTML = `
-            <h3>✔ Objet trouvé !</h3>
-            <p><b>Nom :</b> ${item.title}</p>
-            <p><b>Description :</b> ${item.description}</p>
-            <p><b>Localisation :</b> ${item.lat}, ${item.lng}</p>
-            <p><b>Contact du trouveur :</b> ${item.phone}</p>
-        `;
-    }
-    catch(e) {
-        box.innerHTML = "<p>⚠️ Erreur serveur</p>";
-    }
-};
+        try {
+            const response = await fetch("/api/match-lost-object", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ title, description: desc })
+            });
 
+            const result = await response.json();
+
+            if (!result.found) {
+                box.innerHTML = "<p>❌ Aucun objet correspondant n’a été trouvé.</p>";
+                return;
+            }
+
+            const item = result.item;
+
+            box.innerHTML = `
+                <h3>✔ Objet correspondant trouvé !</h3>
+                <p><b>Nom :</b> ${item.title}</p>
+                <p><b>Description :</b> ${item.description}</p>
+                <p><b>Localisation :</b> ${item.lat}, ${item.lng}</p>
+                <p><b>Contact du trouveur :</b> ${item.phone}</p>
+            `;
+        }
+        catch(e) {
+            box.innerHTML = "<p>⚠️ Erreur serveur</p>";
+        }
+    };
 </script>
 
 </body>

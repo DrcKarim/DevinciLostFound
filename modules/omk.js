@@ -122,15 +122,16 @@ export class omk {
 this.uploadMediaToItem = function (itemId, fileBlob) {
 
     const url = me.api + 'media?key_identity=' + me.ident + '&key_credential=' + me.key;
+    console.log("Upload status:", url);
 
     const fd = new FormData();
 
-    // ⭐ FILE ALWAYS NEEDS A REAL NAME ⭐
+    //   FILE ALWAYS NEEDS A REAL NAME  
     const realFile = new File([fileBlob], fileBlob.name || "photo.jpg", {
         type: fileBlob.type || "image/jpeg"
     });
 
-    // ⭐ REQUIRED FORMAT ⭐
+    //   REQUIRED FORMAT  
     fd.append("file[0]", realFile);
     
     const data = {
@@ -362,6 +363,7 @@ this.uploadMediaToItem = function (itemId, fileBlob) {
         }
 
         this.createItem = function (data, cb=false, verifDoublons, file){
+            console.log("➡ Inside Button clicked OK");
             if(verifDoublons){
                 let items = me.searchItems(verifDoublons);
                 if(items.length){
@@ -384,6 +386,26 @@ this.uploadMediaToItem = function (itemId, fileBlob) {
                     "@value": data['dcterms:description'] || 'Audio recorded via DevinciLostFound'
                 }]
             };
+
+            /*
+            , // J'ai ajouter ces valeurs mais il sont pas ajouter sur omeka 
+                 "dlf:phone": [{
+                    "type": "literal",
+                    "property_id": me.getPropId('dlf:phone'),
+                    "@value": data['dlf:phone'] || '0600000000'
+                }],
+                 "dlf:nom": [{
+                    "type": "literal",
+                    "property_id": me.getPropId('dlf:nom'),
+                    "@value": data['dlf:nom'] || 'Jack'
+                }],
+                 "dlf:lieu": [{
+                    "type": "literal",
+                    "property_id": me.getPropId('dlf:lieu'),
+                    "@value": data['dlf:lieu'] || 'Devinci Pole'
+                }]
+            
+            */
         
             return fetch(url, {
                 method: 'POST',
