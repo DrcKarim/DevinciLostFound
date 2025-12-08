@@ -37,7 +37,176 @@
             font-size: 15px;
             min-height: 90px;
             resize: vertical;
-    }
+        }
+        
+        /* Enhanced search results styling */
+        .match-result {
+            background: #f0fff4;
+            border: 2px solid #22c55e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        
+        /* Random suggestion styling */
+        .match-result.random-suggestion {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+        }
+        
+        .match-score {
+            background: #22c55e;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .random-suggestion .match-score {
+            background: #f59e0b;
+        }
+        
+        .item-details {
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .contact-info {
+            background: #e0f2fe;
+            border: 1px solid #0284c7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .contact-info h4 {
+            margin: 0 0 10px 0;
+            color: #0284c7;
+        }
+        
+        .additional-matches {
+            font-style: italic;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .result-box {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .ai-explanation {
+            background: #f0f4ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .match-confidence {
+            background: #f8fafc;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+            margin-top: 10px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        /* Loading animations */
+        .loading {
+            display: inline-block;
+            position: relative;
+            padding: 20px;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2F7CF6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-dots {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 20px;
+        }
+        
+        .loading-dots div {
+            position: absolute;
+            top: 50%;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #2F7CF6;
+            animation-timing-function: cubic-bezier(0, 1, 1, 0);
+            transform: translateY(-50%);
+        }
+        
+        .loading-dots div:nth-child(1) {
+            left: 8px;
+            animation: loading-dots1 0.6s infinite;
+        }
+        
+        .loading-dots div:nth-child(2) {
+            left: 8px;
+            animation: loading-dots2 0.6s infinite;
+        }
+        
+        .loading-dots div:nth-child(3) {
+            left: 32px;
+            animation: loading-dots2 0.6s infinite;
+        }
+        
+        .loading-dots div:nth-child(4) {
+            left: 56px;
+            animation: loading-dots3 0.6s infinite;
+        }
+        
+        @keyframes loading-dots1 {
+            0% { transform: scale(0) translateY(-50%); }
+            100% { transform: scale(1) translateY(-50%); }
+        }
+        
+        @keyframes loading-dots3 {
+            0% { transform: scale(1) translateY(-50%); }
+            100% { transform: scale(0) translateY(-50%); }
+        }
+        
+        @keyframes loading-dots2 {
+            0% { transform: translate(0, -50%); }
+            100% { transform: translate(24px, -50%); }
+        }
+        
+        .ai-processing {
+            background: linear-gradient(90deg, #e3f2fd, #bbdefb, #e3f2fd);
+            background-size: 200% 100%;
+            animation: shimmer 2s ease-in-out infinite;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
     </style>
 </head>
 
@@ -110,32 +279,75 @@
         const title = document.getElementById("title").value.trim();
         const phone = document.getElementById("phone").value.trim();
         const description = document.getElementById("foundDescription").value.trim();
-        const lat = document.getElementById("lat").value;
-        const lng = document.getElementById("lng").value;
+        const nom = document.getElementById("nom").value.trim();
+        const lieu = document.getElementById("lieu").value.trim();
 
-        if (!title) return alert("Veuillez entrer un nom d’objet.");
-        if (!description) return alert("Veuillez décrire l’objet trouvé.");
+        if (!title) return alert("Veuillez entrer un nom d'objet.");
+        if (!description) return alert("Veuillez décrire l'objet trouvé.");
         if (!phone) return alert("Veuillez entrer le numéro du trouveur.");
+        if (!nom) return alert("Veuillez entrer le nom du trouveur.");
 
-        const desc = 
-            `Objet trouvé : ${description}\n` +
+        // Show loading state
+        const sendBtn = document.getElementById("sendTextBtn");
+        const originalBtnText = sendBtn.innerHTML;
+        sendBtn.innerHTML = '<span class="loading-spinner"></span>Création en cours...';
+        sendBtn.disabled = true;
+
+        // Create structured description with metadata
+        const structuredDesc = 
+            `Description de l'objet : ${description}\n` +
             `Téléphone du trouveur : ${phone}\n` +
-            `Localisation : lat=${lat}, lng=${lng}`;
-
+            `Trouvé par : ${nom}\n` +
+            `Lieu : ${lieu || 'Non spécifié'}`;
+        
         const data = {
             "dcterms:title": title,
-            "dcterms:description": desc
+            "dcterms:description": structuredDesc
         };
 
         try {
             const item = await O.createItem(data);
-            if (!item) return alert("Erreur lors de la création sur Omeka.");
+            if (!item) {
+                sendBtn.innerHTML = originalBtnText;
+                sendBtn.disabled = false;
+                return alert("Erreur lors de la création sur Omeka.");
+            }
 
-            alert("✔ Objet déclaré avec succès !");
-            window.location.reload();
-        }
-        catch (e) {
-         //   alert("Erreur : " + e);
+            // Show AI processing notification
+            sendBtn.innerHTML = '<span class="loading-spinner"></span>IA en traitement...';
+            
+            // Wait a bit for AI processing, then show success
+            setTimeout(() => {
+                sendBtn.innerHTML = originalBtnText;
+                sendBtn.disabled = false;
+                
+                // Show success message with AI info
+                const successMsg = document.createElement('div');
+                successMsg.className = 'ai-processing';
+                successMsg.innerHTML = `
+                    <p><strong>✅ Objet déclaré avec succès !</strong></p>
+                    <p>🤖 L'IA analyse votre description pour améliorer les futures correspondances...</p>
+                    <small>ID de l'objet: ${item['o:id'] || 'N/A'}</small>
+                `;
+                
+                sendBtn.parentNode.insertBefore(successMsg, sendBtn.nextSibling);
+                
+                // Auto-remove success message and reset form
+                setTimeout(() => {
+                    successMsg.remove();
+                    document.getElementById("title").value = '';
+                    document.getElementById("foundDescription").value = '';
+                    document.getElementById("phone").value = '';
+                    document.getElementById("nom").value = '';
+                    document.getElementById("lieu").value = '';
+                }, 5000);
+                
+            }, 3000); // Give AI some time to process
+            
+        } catch (e) {
+            sendBtn.innerHTML = originalBtnText;
+            sendBtn.disabled = false;
+            alert("Erreur : " + (e.message || e));
         }
     };
 
@@ -163,10 +375,26 @@
             return;
         }
 
-        box.innerHTML = "<p>⏳ Recherche en cours...</p>";
+        // Enhanced loading animation
+        box.innerHTML = `
+            <div class="ai-processing">
+                <div class="loading-dots">
+                    <div></div><div></div><div></div><div></div>
+                </div>
+                <p><strong>🤖 Recherche IA en cours...</strong></p>
+                <p>Analyse sémantique des objets trouvés...</p>
+                <small>Cette opération peut prendre quelques secondes</small>
+            </div>
+        `;
+        
+        // Disable search button during processing
+        const searchBtn = document.getElementById("searchLostBtn");
+        const originalSearchText = searchBtn.innerHTML;
+        searchBtn.innerHTML = '<span class="loading-spinner"></span>Analyse IA...';
+        searchBtn.disabled = true;
 
         try {
-            const response = await fetch("/api/match-lost-object", {
+            const response = await fetch("http://localhost:8083", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({ title, description: desc })
@@ -174,23 +402,54 @@
 
             const result = await response.json();
 
-            if (!result.found) {
-                box.innerHTML = "<p>❌ Aucun objet correspondant n’a été trouvé.</p>";
+            if (!result.matchFound) {
+                let message = "❌ Aucun objet correspondant n'a été trouvé.";
+                if (result.reason) {
+                    message += `<br><small style="opacity: 0.7;">Raison: ${result.reason}</small>`;
+                }
+                if (result.bestScore && result.bestScore > 0) {
+                    message += `<br><small style="opacity: 0.7;">Meilleure correspondance: ${result.bestScore}% (seuil: ${result.threshold}%)</small>`;
+                }
+                box.innerHTML = `<p>${message}</p>`;
                 return;
             }
 
-            const item = result.item;
+            // Display successful match with AI analysis
+            const isRandom = result.isRandomSuggestion || false;
+            const matchTitle = isRandom ? '💡 Suggestion aléatoire' : '✅ Objet correspondant trouvé par IA !';
+            const matchClass = isRandom ? 'match-result random-suggestion' : 'match-result';
 
             box.innerHTML = `
-                <h3>✔ Objet correspondant trouvé !</h3>
-                <p><b>Nom :</b> ${item.title}</p>
-                <p><b>Description :</b> ${item.description}</p>
-                <p><b>Localisation :</b> ${item.lat}, ${item.lng}</p>
-                <p><b>Contact du trouveur :</b> ${item.phone}</p>
+                <div class="${matchClass}">
+                    <h3>${matchTitle}</h3>
+                    ${isRandom ? '<p style="color: #f59e0b; font-weight: 600;">⚠️ Aucune correspondance exacte trouvée. Voici une suggestion parmi les objets trouvés :</p>' : ''}
+                    <div class="match-score">Correspondance: ${result.score}%</div>
+                    <div class="ai-explanation">
+                        <p><b>🤖 Analyse IA:</b> ${result.explanation}</p>
+                    </div>
+                    <div class="item-details">
+                        <p><b>📦 Objet :</b> ${result.title}</p>
+                        <p><b>📝 Description originale :</b> ${result.description.split('\n')[0]}</p>
+                        ${result.aiDescription ? `<p><b>🤖 Résumé IA :</b> ${result.aiDescription}</p>` : ''}
+                        <p><b>📍 Lieu :</b> ${result.placeFound || 'Non spécifié'}</p>
+                        <p><b>📅 Trouvé le :</b> ${new Date(result.dateFound).toLocaleDateString('fr-FR')}</p>
+                    </div>
+                    <div class="contact-info">
+                        <h4>📞 Informations de contact</h4>
+                        <p><b>Trouveur :</b> ${result.finderName || 'Non spécifié'}</p>
+                        <p><b>Téléphone :</b> <a href="tel:${result.finderPhone}">${result.finderPhone || 'Non disponible'}</a></p>
+                    </div>
+                    <div class="match-confidence">
+                        <small>ID: ${result.itemId} | ${isRandom ? 'Suggestion aléatoire 🎲' : 'Confiance: ' + (result.score >= 70 ? 'Élevée ✅' : result.score >= 50 ? 'Modérée ⚠️' : 'Faible ❌')}</small>
+                    </div>
+                </div>
             `;
-        }
-        catch(e) {
-            box.innerHTML = "<p>⚠️ Erreur serveur</p>";
+        } catch(e) {
+            box.innerHTML = "<p>⚠️ Erreur serveur: " + (e.message || e) + "</p>";
+        } finally {
+            // Always restore the search button
+            searchBtn.innerHTML = originalSearchText;
+            searchBtn.disabled = false;
         }
     };
 </script>
