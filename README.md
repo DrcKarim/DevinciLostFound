@@ -1,6 +1,12 @@
 ### Titre du projet  
 **DevinciLostFound – Plateforme intelligente de gestion des objets perdus et trouvés**
 
+Pour démarrer le projet, il faut exécuter ce fichier :
+```bash
+cd DevinciLostFound
+./start.sh
+```
+
 Lien omeka: https://omeka.todayfrance.fr/
 
 Page: https://omeka.todayfrance.fr/DevinciLostFound/apiOmk.html
